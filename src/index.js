@@ -13,6 +13,7 @@ const randomId = (length) =>
     .toString(36)
     .substring(2, length + 2);
 
+// REQ 4:
 const validateEmail = (req, res, next) => {
   const { email } = req.body;
   const emailRegex = /^[\w+.]+@\w+\.\w{2,}(?:\.\w{2})?$/.test(email);
@@ -84,6 +85,9 @@ app.post('/login', validateEmail, validatePassword, async (req, res) => {
   const token = randomId(8) + randomId(8);
   res.status(200).json({ token });
 });
+
+// REQ 5:
+app.post('/talker', async (req, res) => {});
 
 app.listen(PORT, () => {
   console.log(`Online on port ${PORT}`);
