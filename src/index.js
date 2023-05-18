@@ -164,6 +164,15 @@ app.get('/talker', async (req, res) => {
   res.status(HTTP_OK_STATUS).json(talkersList);
 });
 
+// REQ 8:
+app.get('/talker/search', validateAuthorization, async (req, res) => {
+  const { q } = req.query;
+  console.log(q);
+  const data = await readAll();
+  const queryData = data.filter((d) => d.name.includes(q));
+  return res.status(HTTP_OK_STATUS).json(queryData);
+});
+
 // REQ 2:
 app.get('/talker/:id', async (req, res) => {
   const { id } = req.params;
