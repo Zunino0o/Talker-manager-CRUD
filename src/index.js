@@ -15,6 +15,13 @@ const readAll = async () => {
   const data = await fs.readFile('./src/talker.json', 'utf-8');
   return JSON.parse(data);
 };
+
+// Leitura de um palestrante pelo ID
+const findOne = async (id) => {
+  const all = await readAll();
+  return all.find((t) => t.id === id);
+};
+
 // Gera um ID aleatorio
 const randomId = (length) =>
   Math.random()
@@ -25,7 +32,7 @@ const randomId = (length) =>
 const validateInteger = (num) => {
   const type = num === Number(num.toFixed(0));
   const gap = num > 0 && num < 6;
-  console.log(type, num, num.toFixed(0));
+  // console.log(type, num, num.toFixed(0));
   return type && gap;
 };
 
@@ -85,6 +92,7 @@ const validateName = (req, res, next) => {
   return next();
 };
 
+// REQ 5:
 const validateAge = (req, res, next) => {
   const { age } = req.body;
   if (!age) return res.status(400).json({ message: 'O campo "age" é obrigatório' });
@@ -96,12 +104,14 @@ const validateAge = (req, res, next) => {
   return next();
 };
 
+// REQ 5:
 const validateTalk = (req, res, next) => {
   const { talk } = req.body;
   if (!talk) return res.status(400).json({ message: 'O campo "talk" é obrigatório' });
   return next();
 };
 
+// REQ 5:
 const validateWatchedAt = (req, res, next) => {
   const { watchedAt } = req.body.talk;
   if (!watchedAt) return res.status(400).json({ message: 'O campo "watchedAt" é obrigatório' });
@@ -115,6 +125,7 @@ const validateWatchedAt = (req, res, next) => {
   return next();
 };
 
+// REQ 5:
 const validateRate = (req, res, next) => {
   const { rate } = req.body.talk;
   if (rate === undefined) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
@@ -124,6 +135,16 @@ const validateRate = (req, res, next) => {
       message: 'O campo "rate" deve ser um número inteiro entre 1 e 5',
     });
   }
+  return next();
+};
+
+// REQ 6:
+const validateId = async (req, res, next) => {
+  const id = Number(req.params.id);
+  const talker = await findOne(id);
+
+  if (!talker) return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+
   return next();
 };
 
@@ -182,6 +203,26 @@ app.post('/talker',
     await fs.writeFile('./src/talker.json', JSON.stringify(data));
     return res.status(201).json(newTalker);
   });
+
+// REQ 6:
+app.put('/talker/:id', 
+  validateAuthorization, 
+  validateName, 
+  validateAge, 
+  validateTalk, 
+  validateWatchedAt, 
+  validateRate,
+  validateId,
+ async (req, res) => {
+  const id = Number(req.params.id);
+  const data = await readAll();
+  const talker = data.find((t) => t.id === id);
+  const index = data.indexOf(talker);
+  const updatedTalker = { id, ...req.body };
+  data.splice(index, 1, updatedTalker);
+  await fs.writeFile('./src/talker.json', JSON.stringify(data));
+  return res.status(200).json(updatedTalker);
+ });
 
 app.listen(PORT, () => {
   console.log(`Online on port ${PORT}`);
