@@ -6,13 +6,14 @@ app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
 const PORT = process.env.PORT || '3001';
+const DB_PATH = './src/talker.json';
 
 // Proximo ID
 let nextId = 6;
 
 // Leitura do arquivo talker.json
 const readAll = async () => {
-  const data = await fs.readFile('./src/talker.json', 'utf-8');
+  const data = await fs.readFile(DB_PATH, 'utf-8');
   return JSON.parse(data);
 };
 
@@ -166,7 +167,7 @@ app.get('/talker', async (req, res) => {
 // REQ 2:
 app.get('/talker/:id', async (req, res) => {
   const { id } = req.params;
-  const data = await fs.readFile('./src/talker.json', 'utf-8');
+  const data = await fs.readFile(DB_PATH, 'utf-8');
   const talkersList = JSON.parse(data);
   const [filter] = talkersList.filter((t) => t.id === +id);
   // console.log(talkersList);
@@ -184,7 +185,7 @@ app.get('/talker/:id', async (req, res) => {
 app.post('/login', validateEmail, validatePassword, async (req, res) => {
   // const { email, password } = req.body;
   const token = randomId(8) + randomId(8);
-  res.status(200).json({ token });
+  res.status(HTTP_OK_STATUS).json({ token });
 });
 
 // REQ 5:
@@ -200,7 +201,7 @@ app.post('/talker',
     const newTalker = { id: nextId, ...req.body };
     data.push(newTalker);
     nextId += 1;
-    await fs.writeFile('./src/talker.json', JSON.stringify(data));
+    await fs.writeFile(DB_PATH, JSON.stringify(data));
     return res.status(201).json(newTalker);
   });
 
@@ -220,9 +221,18 @@ app.put('/talker/:id',
   const index = data.indexOf(talker);
   const updatedTalker = { id, ...req.body };
   data.splice(index, 1, updatedTalker);
-  await fs.writeFile('./src/talker.json', JSON.stringify(data));
-  return res.status(200).json(updatedTalker);
+  await fs.writeFile(DB_PATH, JSON.stringify(data));
+  return res.status(HTTP_OK_STATUS).json(updatedTalker);
  });
+
+// REQ 7:
+app.delete('/talker/:id', validateAuthorization, validateId, async (req, res) => {
+  const id = Number(req.params.id);
+  const data = await readAll();
+  const newData = data.filter((d) => d.id !== id);
+  await fs.writeFile(DB_PATH, JSON.stringify(newData));
+  return res.sendStatus(204);
+});
 
 app.listen(PORT, () => {
   console.log(`Online on port ${PORT}`);
