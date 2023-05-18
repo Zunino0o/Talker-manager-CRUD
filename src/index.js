@@ -21,6 +21,14 @@ const randomId = (length) =>
     .toString(36)
     .substring(2, length + 2);
 
+// Valida se for numero inteiro
+const validateInteger = (num) => {
+  const type = num === Number(num.toFixed(0));
+  const gap = num > 0 && num < 6;
+  console.log(type, num, num.toFixed(0));
+  return type && gap;
+};
+
 // Middleweres
 // REQ 4:
 const validateEmail = (req, res, next) => {
@@ -59,21 +67,6 @@ const validatePassword = (req, res, next) => {
 };
 
 // REQ 5:
-// const validateKeys = (req, res, next) => {
-//   const reqProps = ['name', 'age', 'talk'];
-//   const reqTalkProps = ['watchedAt', 'rate'];
-//   if (reqProps.every((p) => p in req.body)) {
-//     if (reqTalkProps.every((rp) => rp in req.body.talk)) {
-//       next();
-//     } else {
-//       res.sendStatus(400);
-//     }
-//   } else {
-//     res.sendStatus(400);
-//   }
-// };
-
-// REQ 5:
 const validateAuthorization = (req, res, next) => {
   const token = req.header('authorization');
   if (!token) return res.status(401).json({ message: 'Token não encontrado' });
@@ -95,7 +88,7 @@ const validateName = (req, res, next) => {
 const validateAge = (req, res, next) => {
   const { age } = req.body;
   if (!age) return res.status(400).json({ message: 'O campo "age" é obrigatório' });
-  if (typeof age !== 'number' || +age < 18) {
+  if (typeof age !== 'number' || +age < 18 || +age !== +age.toFixed(0)) {
     return res.status(400).json({ 
       message: 'O campo "age" deve ser um número inteiro igual ou maior que 18',
     });
@@ -112,7 +105,8 @@ const validateTalk = (req, res, next) => {
 const validateWatchedAt = (req, res, next) => {
   const { watchedAt } = req.body.talk;
   if (!watchedAt) return res.status(400).json({ message: 'O campo "watchedAt" é obrigatório' });
-  const checkDateFormat = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i;
+  const checkDateFormat = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i
+  .test(watchedAt);
   if (!checkDateFormat) {
     return res.status(400).json({ 
       message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"',
@@ -123,9 +117,9 @@ const validateWatchedAt = (req, res, next) => {
 
 const validateRate = (req, res, next) => {
   const { rate } = req.body.talk;
-  if (!rate) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
-  const checkRate = rate >= 1 && rate <= 5;
-  if (!checkRate || rate === 0) {
+  if (rate === undefined) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  const checkInteger = validateInteger(rate);
+  if (!checkInteger) {
     return res.status(400).json({ 
       message: 'O campo "rate" deve ser um número inteiro entre 1 e 5',
     });
@@ -174,7 +168,6 @@ app.post('/login', validateEmail, validatePassword, async (req, res) => {
 
 // REQ 5:
 app.post('/talker', 
-  // validateKeys, 
   validateAuthorization, 
   validateName, 
   validateAge, 
