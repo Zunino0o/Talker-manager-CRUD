@@ -166,7 +166,7 @@ app.get('/talker', async (req, res) => {
 // REQ 8:
 app.get('/talker/search', validateAuthorization, async (req, res) => {
   const { q } = req.query;
-  console.log(q);
+  // console.log(q);
   const data = await readAll();
   if (!q) return res.status(HTTP_OK_STATUS).json(data);
   const queryData = data.filter((d) => d.name.includes(q));
